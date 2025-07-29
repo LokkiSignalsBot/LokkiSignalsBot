@@ -1,1 +1,1 @@
-python LokkiBot.py
+# deprecated
