@@ -10,7 +10,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, "Привет! Бот запущен и готов присылать сигналы.")
+    bot.send_message(message.chat.id, "Привет, я готов!")
 
 def send_signal(text):
     bot.send_message(CHAT_ID, text)
