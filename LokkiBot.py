@@ -4,46 +4,53 @@ from flask import Flask, request
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
 import asyncio
+import requests
 
-# Конфигурация
+# Получение переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-PORT = int(os.getenv("PORT", default=8443))
+PORT = int(os.getenv("PORT", default=10000))
 
 # Логирование
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 
 # Flask-приложение
 app = Flask(__name__)
 bot = Bot(token=BOT_TOKEN)
 
-# Инициализация Telegram App
-telegram_app = Application.builder().token(BOT_TOKEN).build()
+# Telegram Application
+application = Application.builder().token(BOT_TOKEN).build()
 
-# Команды
+
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🚀 Бот успешно запущен и готов к работе!")
+    await update.message.reply_text("Бот работает! ✅")
 
-async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Актуальный сигнал по PEPE: вход от 0.000011600, тейк 0.000011900")
 
-# Роут Webhook
+# Регистрируем команду
+application.add_handler(CommandHandler("start", start))
+
+
+# Webhook endpoint для Telegram
 @app.route("/", methods=["POST"])
-def receive_update():
-    update = Update.de_json(request.get_json(force=True), bot)
-    asyncio.run(telegram_app.process_update(update))
-    return "ok"
+def webhook():
+    if request.method == "POST":
+        update = Update.de_json(request.get_json(force=True), bot)
+        asyncio.run(application.process_update(update))
+        return "ok", 200
 
-# Регистрируем команды
-telegram_app.add_handler(CommandHandler("start", start))
-telegram_app.add_handler(CommandHandler("signal_pepe", signal_pepe))
 
-# Установка Webhook и запуск сервера
-async def set_webhook():
-    await bot.set_webhook(url=WEBHOOK_URL)
-    print(f"✅ Webhook установлен: {WEBHOOK_URL}")
+# Устанавливаем Webhook при запуске
+def set_webhook():
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
+    response = requests.get(url)
+    print("Webhook setup response:", response.text)
+
 
 if __name__ == "__main__":
-    asyncio.run(set_webhook())
+    set_webhook()
+    print(f"Starting Flask app on port {PORT}...")
     app.run(host="0.0.0.0", port=PORT)
