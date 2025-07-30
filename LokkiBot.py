@@ -1,10 +1,11 @@
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-"BOT_TOKEN=8233879922:AAHUEhrah5xIM3oa0t3MxFyqntY6F2BNeFo"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Бот работает. ✅")
+    await update.message.reply_text("Привет! Бот запущен и готов работать.")
 
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
