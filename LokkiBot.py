@@ -1,52 +1,49 @@
 import os
-from telegram import Update
+import logging
+from flask import Flask, request
+from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
+import asyncio
+
+# Конфигурация
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+PORT = int(os.getenv("PORT", default=8443))
+
+# Логирование
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+
+# Flask-приложение
+app = Flask(__name__)
+bot = Bot(token=BOT_TOKEN)
+
+# Инициализация Telegram App
+telegram_app = Application.builder().token(BOT_TOKEN).build()
 
 # Команды
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Бот запущен и готов работать.")
+    await update.message.reply_text("🚀 Бот успешно запущен и готов к работе!")
 
 async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Сигнал по PEPE: Пока нет новой точки входа.")
+    await update.message.reply_text("📈 Актуальный сигнал по PEPE: вход от 0.000011600, тейк 0.000011900")
 
-async def signal_trx(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Сигнал по TRX: Пока нет новой точки входа.")
+# Роут Webhook
+@app.route("/", methods=["POST"])
+def receive_update():
+    update = Update.de_json(request.get_json(force=True), bot)
+    asyncio.run(telegram_app.process_update(update))
+    return "ok"
 
-async def signal_ena(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Сигнал по ENA: Пока нет новой точки входа.")
+# Регистрируем команды
+telegram_app.add_handler(CommandHandler("start", start))
+telegram_app.add_handler(CommandHandler("signal_pepe", signal_pepe))
 
-async def signal_xrp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Сигнал по XRP: Пока нет новой точки входа.")
-
-async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Портфель пока пуст. Ожидаем сделок.")
-
-# Основная функция
-async def main():
-    TOKEN = os.environ.get("BOT_TOKEN")
-    WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
-    PORT = int(os.environ.get("PORT", "5000"))
-
-    application = Application.builder().token(TOKEN).build()
-
-    # Хендлеры
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("signal_pepe", signal_pepe))
-    application.add_handler(CommandHandler("signal_trx", signal_trx))
-    application.add_handler(CommandHandler("signal_ena", signal_ena))
-    application.add_handler(CommandHandler("signal_xrp", signal_xrp))
-    application.add_handler(CommandHandler("portfolio", portfolio))
-
-    # Устанавливаем Webhook
-    await application.bot.set_webhook(url=WEBHOOK_URL)
-
-    # Запуск через Webhook
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        webhook_url=WEBHOOK_URL
-    )
+# Установка Webhook и запуск сервера
+async def set_webhook():
+    await bot.set_webhook(url=WEBHOOK_URL)
+    print(f"✅ Webhook установлен: {WEBHOOK_URL}")
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    asyncio.run(set_webhook())
+    app.run(host="0.0.0.0", port=PORT)
