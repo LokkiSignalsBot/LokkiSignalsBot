@@ -59,7 +59,4 @@ async def telegram_webhook(req: Request):
 # Обязательный GET для главной страницы
 @app.get("/")
 def root():
-    return {"status": "ok"}
-
-# Запуск через uvicorn
-if __name__ == "__main__":
+    return {"status": "ok"}р
