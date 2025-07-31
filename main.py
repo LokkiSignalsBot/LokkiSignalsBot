@@ -1,18 +1,34 @@
-():
-    await application.bot.set_webhook(WEBHOOK_URL)
-    await application.initialize()
-    asyncio.create_task(application.start())
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+)
+from fastapi import FastAPI
+import asyncio
+import os
 
-# При остановке
-@app.on_event("shutdown")
-async def on_shutdown():
-    await application.stop()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Хендлеры
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("signal_pepe", signal_pepe))
-application.add_handler(CommandHandler("signal_xrp", signal_xrp))
-application.add_handler(CommandHandler
+app = FastAPI()
+
+# === Команды ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привет! Бот работает ✅")
+
+async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📈 Сигнал по PEPE: скоро будет!")
+
+async def signal_xrp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📉 Сигнал по XRP: скоро будет!")
+
+async def signal_trx(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📊 Сигнал по TRX: скоро будет!")
+
+async def signal_ena(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📢 Сигнал по ENA: скоро будет!")
+
 async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("💼 Портфель: скоро будет отображаться.")
 
@@ -34,21 +50,13 @@ application.add_handler(CommandHandler("portfolio", portfolio))
 application.add_handler(CommandHandler("alert_on", alert_on))
 application.add_handler(CommandHandler("alert_off", alert_off))
 
-@app.post("/webhook/{token}")
-async def process_webhook(token: str, request: Request):
-    if token != BOT_TOKEN:
-        return {"ok": False, "description": "Invalid token"}
-    data = await request.json()
-    update = Update.de_json(data, application.bot)
-    await application.update_queue.put(update)
-    return {"ok": True}
-
+# === FastAPI и Webhook запуск ===
 @app.on_event("startup")
-async def startup():
+async def on_startup():
     await application.initialize()
-    await application.bot.set_webhook(WEBHOOK_URL + f"/webhook/{BOT_TOKEN}")
-    await application.start()
+    await application.bot.set_webhook(WEBHOOK_URL)
+    asyncio.create_task(application.start())
 
 @app.on_event("shutdown")
-async def shutdown():
+async def on_shutdown():
     await application.stop()
