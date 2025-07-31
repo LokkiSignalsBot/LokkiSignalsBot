@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: lokki-signals-bot
+    env: python
+    plan: starter
+    buildCommand: ""
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: BOT_TOKEN
+        value: 8233879922:AAGHqdKZmSY853TCboDfNFV8DqRQdpYxOSU
+      - key: CHAT_ID
+        value: 123456789       # ← замени на свой числовой ID
+      - key: WEBHOOK_SECRET_PATH
+        value: /webhook
+      - key: WEBHOOK_URL
+        value: https://lokki-signals-bot.onrender.com
