@@ -80,7 +80,6 @@ async def startup():
     print("✅ Telegram-бот инициализирован.")
 
 # ==== Главная страница ====
-
 @app.get("/")
 async def root():
-    return {"status": "бот запущен"}
+    return {"ok": True}
