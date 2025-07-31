@@ -1,4 +1,4 @@
-from telegram import Update
+rom telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from fastapi import FastAPI
 import asyncio
@@ -55,4 +55,4 @@ async def on_startup():
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    await application.stop()
+    await application.stop(
