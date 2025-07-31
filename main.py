@@ -1,48 +1,44 @@
 import os
+import logging
 from fastapi import FastAPI, Request
-from telegram import Update, Bot
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-)
+from telegram import Bot, Update
+from telegram.ext import Application, CommandHandler, ContextTypes, Dispatcher
 
-# === Переменные окружения ===
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = int(os.environ.get("CHAT_ID"))  # пример: 123456789
-WEBHOOK_URL = "https://lokki-signals-bot2.onrender.com"  # твой домен на Render
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8233879922:AAGHqdKZmSY853TCboDfNFV8DqRQdpYxOSU")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://lokki-signals-bot2.onrender.com/webhook")
+CHAT_ID = os.getenv("CHAT_ID", "360051195")
 
-# === FastAPI и Telegram Bot ===
-bot = Bot(token=BOT_TOKEN)
 app = FastAPI()
+bot = Bot(BOT_TOKEN)
+
 application = Application.builder().token(BOT_TOKEN).build()
 
-# === Команды ===
+# Команды
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Бот Lokki Signals работает!")
+    await update.message.reply_text("🤖 Бот запущен!")
 
 async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 PEPE: сигнала пока нет.")
+    await update.message.reply_text("🧠 Сигнал по PEPE: ждём точку входа...")
 
 async def signal_xrp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 XRP: сигнала пока нет.")
+    await update.message.reply_text("📊 Сигнал по XRP: анализируем рынок...")
 
 async def signal_trx(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 TRX: сигнала пока нет.")
+    await update.message.reply_text("⚡️ Сигнал по TRX: данные обновляются...")
 
 async def signal_ena(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 ENA: сигнала пока нет.")
+    await update.message.reply_text("📈 Сигнал по ENA: ищем вход...")
 
 async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("💼 Портфель: не подключено.")
+    await update.message.reply_text("💼 Твой портфель скоро будет тут.")
 
 async def alert_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔔 Уведомления ВКЛЮЧЕНЫ.")
+    await update.message.reply_text("🔔 Уведомления включены.")
 
 async def alert_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔕 Уведомления ВЫКЛЮЧЕНЫ.")
+    await update.message.reply_text("🔕 Уведомления отключены.")
 
-# === Роутинг команд ===
+# Регистрируем команды
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("signal_pepe", signal_pepe))
 application.add_handler(CommandHandler("signal_xrp", signal_xrp))
@@ -52,20 +48,20 @@ application.add_handler(CommandHandler("portfolio", portfolio))
 application.add_handler(CommandHandler("alert_on", alert_on))
 application.add_handler(CommandHandler("alert_off", alert_off))
 
-# === Webhook обработка ===
-@app.post("/")
-async def webhook(request: Request):
-    data = await request.json()
+# Webhook POST обработка от Telegram
+@app.post("/webhook")
+async def telegram_webhook(req: Request):
+    data = await req.json()
     update = Update.de_json(data, bot)
     await application.process_update(update)
+    return {"ok": True}
+
+# Обязательный GET для главной страницы
+@app.get("/")
+def root():
     return {"status": "ok"}
 
-# === Запуск бота при старте FastAPI ===
-@app.on_event("startup")
-async def startup():
-    await application.initialize()
-    await application.start()
-    await bot.set_webhook(url=WEBHOOK_URL)
-
-@app.on_event("shutdown")
-async def shutdown():
+# Запуск через uvicorn
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=10000)
