@@ -37,4 +37,4 @@ application.add_handler(CommandHandler("signal_pepe", signal_pepe))
 # Запускаем Webhook при старте
 @app.on_event("startup")
 async def on_startup():
-    await application.bot.set_webhook(url="https://lokki-signals-bot2.onrender.com")
+    await application.bot
