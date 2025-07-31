@@ -31,7 +31,6 @@ async def main():
 
     print("✅ Webhook запущен!")
 
-    # Ожидаем, пока приложение работает
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
