@@ -8,36 +8,40 @@ from telegram.ext import (
     ContextTypes,
 )
 
-# Загружаем переменные окружения
+# Загрузка переменных окружения
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# Создаём Telegram-приложение
+# Проверка наличия токена
+if not BOT_TOKEN:
+    raise RuntimeError("❌ Переменная окружения BOT_TOKEN не установлена.")
+
+# Инициализация Telegram-приложения
 application = Application.builder().token(BOT_TOKEN).build()
 
-# Инициализируем FastAPI
+# Инициализация FastAPI
 app = FastAPI()
 
-# === Команды ===
+# ==== Команды ====
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Привет! Бот активен и готов к работе.")
+    await update.message.reply_text("👋 Привет! Бот работает!")
 
 async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по PEPE: вход в лонг от 0.000011500, тейк 0.000011900, стоп 0.000011400.")
+    await update.message.reply_text("📈 PEPE: вход от 0.000011500, тейк 0.000011900, стоп 0.000011400.")
 
 async def signal_xrp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📉 Сигнал по XRP: следим за уровнем 0.60 — возможен отскок.")
+    await update.message.reply_text("📉 XRP: следим за уровнем 0.60 — возможен отскок.")
 
 async def signal_trx(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📊 Сигнал по TRX: уверенный рост, точка входа при пробое 0.1300.")
+    await update.message.reply_text("📊 TRX: рост при пробое 0.1300.")
 
 async def signal_ena(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по ENA: накопление в зоне 0.68–0.70. Ожидается выход вверх.")
+    await update.message.reply_text("📈 ENA: накопление в зоне 0.68–0.70, возможен рост.")
 
 async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("💼 Портфель:\n- PEPE: $300\n- XRP: $150\n- TRX: $50\n- В Earn и USDT: остальное")
+    await update.message.reply_text("💼 Портфель:\n- PEPE: $300\n- XRP: $150\n- TRX: $50\n- Остальное в Earn/USDT")
 
 async def alert_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔔 Уведомления включены.")
@@ -45,7 +49,7 @@ async def alert_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def alert_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔕 Уведомления выключены.")
 
-# === Регистрируем команды ===
+# ==== Регистрация команд ====
 
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("signal_pepe", signal_pepe))
@@ -56,15 +60,27 @@ application.add_handler(CommandHandler("portfolio", portfolio))
 application.add_handler(CommandHandler("alert_on", alert_on))
 application.add_handler(CommandHandler("alert_off", alert_off))
 
-# === Webhook ===
+# ==== Webhook ====
 
 @app.post("/webhook")
-async def telegram_webhook(req: Request):
-    data = await req.json()
-    update = Update.de_json(data, application.bot)
-    await application.process_update(update)
-    return {"ok": True}  # ← Была проблема здесь
+async def telegram_webhook(request: Request):
+    try:
+        data = await request.json()
+        update = Update.de_json(data, application.bot)
+        await application.process_update(update)
+    except Exception as e:
+        print(f"Ошибка обработки Webhook: {e}")
+    return {"ok": True}
 
-# === Главная страница (обязательная) ===
+# ==== Инициализация Telegram при запуске ====
+
+@app.on_event("startup")
+async def startup():
+    await application.initialize()
+    print("✅ Telegram-бот инициализирован.")
+
+# ==== Главная страница ====
 
 @app.get("/")
+async def root():
+    return {"status": "бот запущен"}
