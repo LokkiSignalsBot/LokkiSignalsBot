@@ -9,13 +9,11 @@ WEBHOOK_URL = f"https://lokki-signals-bot.onrender.com{WEBHOOK_PATH}"
 
 bot_app = Application.builder().token(TOKEN).build()
 
-# Пример команды
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Бот работает через Webhook 🚀")
 
 bot_app.add_handler(CommandHandler("start", start))
 
-# FastAPI
 app = FastAPI()
 
 @app.on_event("startup")
