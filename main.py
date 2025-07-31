@@ -67,4 +67,4 @@ async def webhook_handler(жrequest: Request):
 # === Запуск при старте Render ===
 @app.on_event("startup")
 async def on_startup():
-    await application.bot.set_webhook(WEBHOOK_URL)
+    await application.bot.set_webhook
