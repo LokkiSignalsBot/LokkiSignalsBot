@@ -64,5 +64,4 @@ application.add_handler(CommandHandler("signal_xrp", signal_xrp))
 application.add_handler(CommandHandler("signal_trx", signal_trx))
 application.add_handler(CommandHandler("signal_ena", signal_ena))
 application.add_handler(CommandHandler("portfolio", portfolio))
-application.add_handler(CommandHandler("alert_on", alert_on))
-application.add_handler(CommandHandler("alert_off", alert_off))
+appli(CommandHandler("alert
