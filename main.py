@@ -68,5 +68,3 @@ async def telegram_webhook(req: Request):
 # === Главная страница (обязательная) ===
 
 @app.get("/")
-async def root():
-    return {"ok": True}
