@@ -58,7 +58,7 @@ application.add_handler(CommandHandler("alert_off", alert_off))
 
 # === Webhook эндпоинт ===
 @app.post(WEBHOOK_PATH)
-async def webhook_handler(request: Request):
+async def webhook_handler(жrequest: Request):
     update = Update.de_json(await request.json(), application.bot)
     await application.update_queue.put(update)
     return {"ok": True}
@@ -68,9 +68,3 @@ async def webhook_handler(request: Request):
 @app.on_event("startup")
 async def on_startup():
     await application.bot.set_webhook(WEBHOOK_URL)
-
-
-# === Запуск бота вручную (локально или для uvicorn) ===
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT)
