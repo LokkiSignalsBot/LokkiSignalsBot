@@ -1,37 +1,37 @@
-import os
-import asyncio
+import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram.constants import ParseMode
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = int(os.environ.get("CHAT_ID"))
-PORT = int(os.environ.get("PORT", 10000))
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+BOT_TOKEN = "8233879922:AAGHqdKZmSY853TCboDfNFV8DqRQdpYxOSU"
+WEBHOOK_URL = "https://lokki-signals-bot.onrender.com"
 
+# Включаем логирование
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
+
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Бот работает ✅")
+    await update.message.reply_text("Привет! Бот работает через Webhook.")
 
-async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Сигнал по PEPE: 💹 LONG 0.00001123 ➡️ 0.00001200")
-
+# Основная функция запуска
 async def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("signal_pepe", signal_pepe))
+    application.add_handler(CommandHandler("start", start))
 
-    await app.initialize()
-    await app.start()
-    await app.updater.start_webhook(
+    # Установка Webhook
+    await application.bot.set_webhook(WEBHOOK_URL)
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()  # <-- обязательная строка для инициализации, даже если polling не нужен
+    await application.run_webhook(
         listen="0.0.0.0",
-        port=PORT,
-        webhook_url=f"{WEBHOOK_URL}/webhook"
+        port=10000,
+        webhook_url=WEBHOOK_URL
     )
 
-    print("✅ Webhook запущен!")
-
-    await asyncio.Event().wait()
-
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
