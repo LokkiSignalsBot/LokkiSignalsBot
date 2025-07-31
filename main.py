@@ -1,51 +1,53 @@
 import os
 from fastapi import FastAPI, Request
-from telegram import Update, BotCommand
+from telegram import Update, Bot
 from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
+    ApplicationBuilder, CommandHandler, ContextTypes
+)
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_SECRET_PATH = os.getenv("WEBHOOK_SECRET_PATH")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+CHAT_ID = int(os.getenv("CHAT_ID"))
+
+app = FastAPI()
+bot = Bot(token=BOT_TOKEN)
+
+application = (
+    ApplicationBuilder()
+    .token(BOT_TOKEN)
+    .build()
 )
 
-# === Константы ===
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_HOST = "https://lokki-signals-bot.onrender.com"
-WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
-PORT = 10000
-
-# === FastAPI ===
-app = FastAPI()
-
-# === Бот-приложение ===
-application = Application.builder().token(BOT_TOKEN).build()
-
-# === Команды ===
+# Команды
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤖 Бот запущен и готов к работе!")
 
 async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по PEPE: вход от 0.000011500, тейк 0.000011900, стоп 0.000011450")
+    await update.message.reply_text("📈 Сигнал по PEPE: ждите обновления...")
 
 async def signal_xrp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по XRP: вход от 0.62, тейк 0.655, стоп 0.598")
+    await update.message.reply_text("📈 Сигнал по XRP: ждите обновления...")
 
 async def signal_trx(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по TRX: вход от 0.1295, тейк 0.136, стоп 0.125")
+    await update.message.reply_text("📈 Сигнал по TRX: ждите обновления...")
 
 async def signal_ena(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📈 Сигнал по ENA: вход от 0.445, тейк 0.472, стоп 0.432")
+    await update.message.reply_text("📈 Сигнал по ENA: ждите обновления...")
 
 async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("💼 Твой текущий портфель: PEPE, XRP, ENA, TRX. Баланс и позиции обновляются вручную.")
+    await update.message.reply_text("💼 Ваш портфель: скоро здесь появится информация.")
 
 async def alert_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔔 Уведомления включены.")
 
 async def alert_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔕 Уведомления отключены.")
+    await update.message.reply_text("🔕 Уведомления выключены.")
 
-# === Роутинг команд ===
+# Регистрация хендлеров
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("signal_pepe", signal_pepe))
 application.add_handler(CommandHandler("signal_xrp", signal_xrp))
@@ -55,16 +57,20 @@ application.add_handler(CommandHandler("portfolio", portfolio))
 application.add_handler(CommandHandler("alert_on", alert_on))
 application.add_handler(CommandHandler("alert_off", alert_off))
 
-
-# === Webhook эндпоинт ===
-@app.post(WEBHOOK_PATH)
-async def webhook_handler(жrequest: Request):
-    update = Update.de_json(await request.json(), application.bot)
+@app.post(f"/{WEBHOOK_SECRET_PATH}")
+async def telegram_webhook(req: Request):
+    data = await req.json()
+    update = Update.de_json(data, bot)
     await application.update_queue.put(update)
     return {"ok": True}
 
-
-# === Запуск при старте Render ===
 @app.on_event("startup")
 async def on_startup():
-    await application.bot.set_webhook
+    await application.initialize()
+    await bot.set_webhook(url=WEBHOOK_URL + f"/{WEBHOOK_SECRET_PATH}")
+    await application.start()
+    print("✅ Bot started with Webhook")
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await application.stop()
