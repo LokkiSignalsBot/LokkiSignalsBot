@@ -63,4 +63,3 @@ def root():
 
 # Запуск через uvicorn
 if __name__ == "__main__":
-    import uvicorn
