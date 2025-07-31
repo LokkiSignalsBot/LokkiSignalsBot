@@ -1,25 +1,30 @@
-import os
-import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from telegram import Update
-from telegram.ext import (
-    Application, CommandHandler, ContextTypes
-)
+from telegram.ext import Application, CommandHandler, ContextTypes
+import os
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
+WEBHOOK_URL = f"https://lokki-signals-bot.onrender.com{WEBHOOK_PATH}"
 
-telegram_app = Application.builder().token(BOT_TOKEN).build()
+bot_app = Application.builder().token(TOKEN).build()
+
+# Пример команды
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привет! Бот работает через Webhook 🚀")
+
+bot_app.add_handler(CommandHandler("start", start))
+
+# FastAPI
 app = FastAPI()
 
-# Команды
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Бот успешно работает!")
-
-telegram_app.add_handler(CommandHandler("start", start))
-
-# При старте FastAPI — запускаем Telegram Webhook
 @app.on_event("startup")
-async def startup():
-    await telegram_app.bot.set_webhook(WEBHOOK_URL)
-    asyncio.create_task(telegram_app.start())
+async def on_startup():
+    await bot_app.bot.set_webhook(WEBHOOK_URL)
+
+@app.post(WEBHOOK_PATH)
+async def telegram_webhook(req: Request):
+    data = await req.json()
+    update = Update.de_json(data, bot_app.bot)
+    await bot_app.process_update(update)
+    return {"status": "ok"}
