@@ -43,7 +43,7 @@ application = ApplicationBuilder().token(BOT_TOKEN).build()
 
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("signal_pepe", signal_pepe))
-application.add_handler(CommandHandler("signal_xrp", signal_xrp))
+application.add_оhandler(CommandHandler("signal_xrp", signal_xrp))
 application.add_handler(CommandHandler("signal_trx", signal_trx))
 application.add_handler(CommandHandler("signal_ena", signal_ena))
 application.add_handler(CommandHandler("portfolio", portfolio))
