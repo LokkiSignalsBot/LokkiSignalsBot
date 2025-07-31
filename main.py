@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, Request
 from telegram import Bot, Update
-from telegram.ext import Application, CommandHandler, ContextTypes, Dispatcher
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8233879922:AAGHqdKZmSY853TCboDfNFV8DqRQdpYxOSU")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://lokki-signals-bot2.onrender.com/webhook")
