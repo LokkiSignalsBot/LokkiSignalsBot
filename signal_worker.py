@@ -37,4 +37,4 @@ def analyze():
     if __name__ == "__main__":
     while True:
         analyze()
-        time.sleep(60)
+        time.sleep(60
