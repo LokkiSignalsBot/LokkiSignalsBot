@@ -3,37 +3,52 @@ import time
 import requests
 from telegram import Bot
 
+# Получение токена и chat_id из переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = int(os.getenv("CHAT_ID"))
+CHAT_ID = os.getenv("CHAT_ID")
 
 bot = Bot(token=BOT_TOKEN)
 
+# Монеты и их пороги для сигнала
+SYMBOLS = {
+    "PEPEUSDT": 0.00001150,
+    "ENAUSDT": 0.540,
+    "TRXUSDT": 0.1220,
+    "MEMEUSDT": 0.0180
+}
+
+# Получение цены с Binance
 def get_price(symbol):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
-    res = requests.get(url)
-    return float(res.json()["price"])
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return float(data["price"])
+    except Exception as e:
+        print(f"[ERROR] {symbol}: {e}")
+        return None
 
-def send_signal(text):
-    bot.send_message(chat_id=CHAT_ID, text=text)
+# Проверка условий и отправка сигнала
+def analyze_and_send():
+    for symbol, threshold in SYMBOLS.items():
+        price = get_price(symbol)
+        if price is None:
+            continue
+        if price <= threshold:
+            message = f"📉 Сигнал на покупку {symbol}\nЦена: {price:.8f} USDT\nПорог: {threshold}"
+            try:
+                bot.send_message(chat_id=CHAT_ID, text=message)
+                print(f"[INFO] Отправлен сигнал по {symbol}")
+            except Exception as e:
+                print(f"[ERROR] Ошибка при отправке в Telegram: {e}")
 
-def analyze():
-    targets = {
-        "1000PEPEUSDT": {"buy_below": 0.00001150, "sell_above": 0.00001190},
-        "TRXUSDT": {"buy_below": 0.0985, "sell_above": 0.1030},
-        "ENAUSDT": {"buy_below": 0.475, "sell_above": 0.520},
-        "MEMEUSDT": {"buy_below": 0.0155, "sell_above": 0.0170}
-    }
-
-    for symbol, levels in targets.items():
-        try:
-            price = get_price(symbol)
-            if price <= levels["buy_below"]:
-                send_signal(f"🔵 LONG сигнал по {symbol} — цена: {price}")
-            elif price >= levels["sell_above"]:
-                send_signal(f"🔴 SHORT сигнал по {symbol} — цена: {price}")
-        except Exception as e:
-            print(f"Ошибка анализа {symbol}: {e}")
+# Основной цикл
+def main():
+    print("🔄 Запуск анализа сигналов...")
+    while True:
+        analyze_and_send()
+        time.sleep(30)
 
 if __name__ == "__main__":
-    while True:
-        analyze(
+    main()
