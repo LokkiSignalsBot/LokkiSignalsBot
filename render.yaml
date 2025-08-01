@@ -1,12 +1,26 @@
 services:
   - type: web
-    name: lokki-signals-bot
+    name: telegram-bot
     env: python
-    plan: free
-    buildCommand: ""
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port 10000"
     envVars:
       - key: BOT_TOKEN
-        value: 8233879922:AAGHqdKZmSY853TCboDfNFV8DqRQdpYxOSU
+        sync: false
       - key: CHAT_ID
-        value: "360051195"
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
+      - key: PORT
+        value: 10000
+
+  - type: worker
+    name: signal-worker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python signal_worker.py"
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
