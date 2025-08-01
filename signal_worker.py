@@ -3,13 +3,11 @@ import time
 import requests
 from telegram import Bot
 
-# Получение токена и chat_id из переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 bot = Bot(token=BOT_TOKEN)
 
-# Монеты и их пороги для сигнала
 SYMBOLS = {
     "PEPEUSDT": 0.00001150,
     "ENAUSDT": 0.540,
@@ -17,7 +15,6 @@ SYMBOLS = {
     "MEMEUSDT": 0.0180
 }
 
-# Получение цены с Binance
 def get_price(symbol):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
     try:
@@ -29,26 +26,29 @@ def get_price(symbol):
         print(f"[ERROR] {symbol}: {e}")
         return None
 
-# Проверка условий и отправка сигнала
 def analyze_and_send():
     for symbol, threshold in SYMBOLS.items():
         price = get_price(symbol)
         if price is None:
             continue
+        print(f"[INFO] {symbol}: {price:.8f} (threshold {threshold})")  # лог в консоль
         if price <= threshold:
             message = f"📉 Сигнал на покупку {symbol}\nЦена: {price:.8f} USDT\nПорог: {threshold}"
             try:
                 bot.send_message(chat_id=CHAT_ID, text=message)
-                print(f"[INFO] Отправлен сигнал по {symbol}")
+                print(f"[SENT] {symbol} сигнал отправлен")
             except Exception as e:
-                print(f"[ERROR] Ошибка при отправке в Telegram: {e}")
+                print(f"[ERROR] Telegram: {e}")
 
-# Основной цикл
 def main():
-    print("🔄 Запуск анализа сигналов...")
+    try:
+        bot.send_message(chat_id=CHAT_ID, text="🤖 Бот сигналов запущен и следит за рынком.")
+    except Exception as e:
+        print(f"[ERROR] Стартовое сообщение не отправлено: {e}")
+
     while True:
         analyze_and_send()
-        time.sleep(30)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
