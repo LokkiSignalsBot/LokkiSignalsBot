@@ -50,5 +50,4 @@ def main():
         analyze_and_send()
         time.sleep(60)
 
-if __name__ == "__main__":
-    main()
+if __name__ ==
