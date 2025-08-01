@@ -34,7 +34,7 @@ def analyze():
         except Exception as e:
             print(f"Ошибка анализа {symbol}: {e}")
 
-    if __name__ == "__main__":
-    while True:
+     if __name__ == "__main__":
+     while True:
         analyze()
         time.sleep(60)
