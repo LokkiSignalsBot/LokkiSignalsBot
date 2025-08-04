@@ -85,3 +85,31 @@ def monitor():
         time.sleep(60)
 
 if __name__ == "__main__":
+    print("[START] signal_worker запущен")
+    sent = set()
+    while True:
+        for sym, lvl in MONITOR.items():
+            price = fetch_price(sym)
+            if price is None:
+                continue
+            print(f"[CHECK] {sym} = {price}")
+
+            key_buy = f"{sym}_buy"
+            key_sell = f"{sym}_sell"
+
+            if price < lvl["buy_below"] and key_buy not in sent:
+                send_msg(sym, price, "buy")
+                sent.add(key_buy)
+                sent.discard(key_sell)
+
+            elif price > lvl["sell_above"] and key_sell not in sent:
+                send_msg(sym, price, "sell")
+                sent.add(key_sell)
+                sent.discard(key_buy)
+
+            if price >= lvl["buy_below"] and key_buy in sent:
+                sent.remove(key_buy)
+            if price <= lvl["sell_above"] and key_sell in sent:
+                sent.remove(key_sell)
+
+        time.sleep(30)
