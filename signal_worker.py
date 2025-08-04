@@ -14,11 +14,11 @@ CHAT_ID = os.getenv("CHAT_ID")
 bot = Bot(token=BOT_TOKEN)
 
 MONITOR = {
-    "PEPEUSDT": {"buy_below": 0.00001160, "sell_above": 0.00001200},
-    "TRXUSDT":  {"buy_below": 0.1200,     "sell_above": 0.1250},
-    "ENAUSDT":  {"buy_below": 0.530,      "sell_above": 0.570},
-    "MEMEUSDT": {"buy_below": 0.0180,     "sell_above": 0.0200},
-    "SUIUSDT":  {"buy_below": 0.610,      "sell_above": 0.650}
+    "PEPEUSDT": {"buy_below": 0.00001060, "sell_above": 0.00001090},
+    "TRXUSDT": {"buy_below": 0.1180, "sell_above": 0.1220},
+    "ENAUSDT": {"buy_below": 0.525, "sell_above": 0.540},
+    "MEMEUSDT": {"buy_below": 0.0175, "sell_above": 0.0192},
+    "SUIUSDT": {"buy_below": 0.595, "sell_above": 0.615}
 }
 
 def fetch_klines(symbol, interval="15m", limit=100):
