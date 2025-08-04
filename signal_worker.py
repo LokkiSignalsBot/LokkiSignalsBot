@@ -1,5 +1,15 @@
+import requests
 
-import os
+def fetch_price(symbol: str) -> float:
+    url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return float(data["price"])
+    except Exception as e:
+        print(f"[ERROR] Ошибка при получении цены {symbol}: {e}")
+        return Noneimport os
 import time
 import requests
 import pandas as pd
