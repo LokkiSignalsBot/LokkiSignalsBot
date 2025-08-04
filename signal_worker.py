@@ -85,5 +85,3 @@ def monitor():
         time.sleep(60)
 
 if __name__ == "__main__":
-    print("✅ signal_worker (с RSI и EMA) запущен.")
-    monitor()
