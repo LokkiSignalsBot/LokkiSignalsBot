@@ -36,5 +36,4 @@ async def root():
 async def on_startup():
     await application.bot.set_webhook(url=WEBHOOK_URL + "/webhook")
     await application.initialize()
-    await application.start()
-    print("✅ Webhook установлен и бот запущен.")
+    await application.start
