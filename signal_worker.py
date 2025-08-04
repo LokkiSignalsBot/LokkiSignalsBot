@@ -9,7 +9,8 @@ def fetch_price(symbol: str) -> float:
         return float(data["price"])
     except Exception as e:
         print(f"[ERROR] Ошибка при получении цены {symbol}: {e}")
-        return Noneimport os
+        return None
+import os
 import time
 import requests
 import pandas as pd
