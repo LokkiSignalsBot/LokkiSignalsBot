@@ -4,20 +4,18 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # например: https://lokki-signals-bot.onrender.com
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 app = FastAPI()
 application = Application.builder().token(BOT_TOKEN).build()
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Привет! Бот работает через Webhook!")
+    await update.message.reply_text("✅ Бот работает!")
 
-# Пример команды /signal_pepe
-async def signal_pepe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🟢 Сигнал по PEPE: вход 0.00001150, тейк 0.00001190, стоп 0.00001130")
+application.add_handler(CommandHandler("start", start))
 
-# Обработка webhook
+# Обработка Telegram webhook
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
@@ -25,14 +23,10 @@ async def telegram_webhook(request: Request):
     await application.update_queue.put(update)
     return {"ok": True}
 
-# Запускаем при старте и устанавливаем Webhook
+# Установка webhook при старте
 @app.on_event("startup")
 async def on_startup():
-    await application.bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+    await application.bot.set_webhook(url=WEBHOOK_URL + "/webhook")
     await application.initialize()
     await application.start()
-    print("✅ Webhook установлен")
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    await application.stop()
+    print("✅ Webhook установлен:", WEBHOOK_URL + "/webhook")
