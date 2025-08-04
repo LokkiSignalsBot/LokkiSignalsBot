@@ -4,3 +4,4 @@ uvicorn==0.29.0
 python-dotenv==1.0.1
 requests
 pandas==2.2.2
+numpy
