@@ -2,12 +2,14 @@ import time
 import requests
 import os
 from telegram import Bot
+from telegram.request import HTTPXRequest
 
 # Получение токена и chat_id из переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-bot = Bot(token=BOT_TOKEN)
+# Создаем синхронного бота
+bot = Bot(token=BOT_TOKEN, request=HTTPXRequest())
 
 # Монеты для отслеживания
 SYMBOLS = ["TRXUSDT", "SUIUSDT", "PEPEUSDT", "ENAUSDT"]
@@ -40,7 +42,7 @@ if __name__ == "__main__":
             price = get_price(symbol)
             if price:
                 print(f"{symbol}: {price}")
-                # Пример условия — ты можешь заменить на свой анализ
+                # Пример условия
                 if symbol == "PEPEUSDT" and price > 0.00001190:
                     send_signal(f"📈 {symbol} пробил уровень! Цена: {price}")
-        time.sleep(15)  # Пауза, чтобы не спамить API
+        time.sleep(15)
