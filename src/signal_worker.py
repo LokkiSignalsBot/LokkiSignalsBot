@@ -1,37 +1,46 @@
-import requests
 import time
+import requests
 import os
 from telegram import Bot
 
+# Получение токена и chat_id из переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 bot = Bot(token=BOT_TOKEN)
 
-SYMBOLS = ["TRXUSDT", "SUIUSDT", "PEPEUSDT", "ENAUSDT", "MEMEUSDT"]
+# Монеты для отслеживания
+SYMBOLS = ["TRXUSDT", "SUIUSDT", "PEPEUSDT", "ENAUSDT"]
+
+# Публичный URL Binance (без API-ключа, не даёт 451 ошибку)
+BASE_URL = "https://api.binance.com/api/v3/ticker/price?symbol="
 
 def get_price(symbol):
-    url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(BASE_URL + symbol, timeout=5)
         response.raise_for_status()
-        return float(response.json()["price"])
+        data = response.json()
+        return float(data["price"])
     except Exception as e:
-        print(f"Ошибка при получении цены {symbol}: {e}")
+        print(f"[ERROR] Не удалось получить цену {symbol}: {e}")
         return None
 
-def main():
+def send_signal(message):
+    try:
+        bot.send_message(chat_id=CHAT_ID, text=message)
+    except Exception as e:
+        print(f"[ERROR] Ошибка отправки в Telegram: {e}")
+
+if __name__ == "__main__":
+    print("✅ Signal Worker запущен")
+    send_signal("🚀 Signal Worker запущен и отслеживает цены.")
+
     while True:
         for symbol in SYMBOLS:
             price = get_price(symbol)
             if price:
                 print(f"{symbol}: {price}")
-                # Пример простого условия для сигнала
-                if symbol == "PEPEUSDT" and price < 0.00001150:
-                    bot.send_message(chat_id=CHAT_ID, text=f"📉 {symbol} упал до {price}, возможен вход в LONG")
-                elif symbol == "PEPEUSDT" and price > 0.00001190:
-                    bot.send_message(chat_id=CHAT_ID, text=f"📈 {symbol} вырос до {price}, возможен вход в SHORT")
-        time.sleep(30)
-
-if __name__ == "__main__":
-    main()
+                # Пример условия — ты можешь заменить на свой анализ
+                if symbol == "PEPEUSDT" and price > 0.00001190:
+                    send_signal(f"📈 {symbol} пробил уровень! Цена: {price}")
+        time.sleep(15)  # Пауза, чтобы не спамить API
