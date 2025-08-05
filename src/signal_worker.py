@@ -1,25 +1,19 @@
-import time
-import requests
+import asyncio
 import os
+import requests
 from telegram import Bot
-from telegram.request import HTTPXRequest
 
-# Получение токена и chat_id из переменных окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# Создаем синхронного бота
-bot = Bot(token=BOT_TOKEN, request=HTTPXRequest())
+bot = Bot(token=BOT_TOKEN)
 
-# Монеты для отслеживания
-SYMBOLS = ["TRXUSDT", "SUIUSDT", "PEPEUSDT", "ENAUSDT"]
+SYMBOLS = ["PEPEUSDT", "TRXUSDT", "ENAUSDT", "SUIUSDT", "MEMEUSDT"]
 
-# Публичный URL Binance (без API-ключа, не даёт 451 ошибку)
-BASE_URL = "https://api.binance.com/api/v3/ticker/price?symbol="
-
-def get_price(symbol):
+async def get_price(symbol):
     try:
-        response = requests.get(BASE_URL + symbol, timeout=5)
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
         return float(data["price"])
@@ -27,22 +21,14 @@ def get_price(symbol):
         print(f"[ERROR] Не удалось получить цену {symbol}: {e}")
         return None
 
-def send_signal(message):
-    try:
-        bot.send_message(chat_id=CHAT_ID, text=message)
-    except Exception as e:
-        print(f"[ERROR] Ошибка отправки в Telegram: {e}")
-
-if __name__ == "__main__":
-    print("✅ Signal Worker запущен")
-    send_signal("🚀 Signal Worker запущен и отслеживает цены.")
-
+async def check_prices():
     while True:
         for symbol in SYMBOLS:
-            price = get_price(symbol)
+            price = await get_price(symbol)
             if price:
-                print(f"{symbol}: {price}")
-                # Пример условия
-                if symbol == "PEPEUSDT" and price > 0.00001190:
-                    send_signal(f"📈 {symbol} пробил уровень! Цена: {price}")
-        time.sleep(15)
+                message = f"{symbol} → {price}"
+                await bot.send_message(chat_id=CHAT_ID, text=message)
+        await asyncio.sleep(60)  # проверка каждую минуту
+
+if __name__ == "__main__":
+    asyncio.run(check_prices())
