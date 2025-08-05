@@ -3,59 +3,50 @@ import time
 import requests
 from telegram import Bot
 
-# Загружаем токены из переменных окружения
+# Загружаем переменные окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
-
-# Заголовки для авторизации на Binance API
-HEADERS = {
-    "X-MBX-APIKEY": BINANCE_API_KEY
-}
-
-# Монеты и их уровни для сигналов
-SYMBOLS = {
-    "PEPEUSDT": 0.00001150,
-    "ENAUSDT": 0.540,
-    "TRXUSDT": 0.1220,
-    "SUIUSDT": 1.200
-}
+BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
 
 bot = Bot(token=BOT_TOKEN)
 
-def get_price(symbol):
-    """Получаем цену с Binance API"""
+# Список монет для отслеживания (Futures)
+SYMBOLS = ["PEPEUSDT", "TRXUSDT", "ENAUSDT", "MEMEUSDT", "SUIUSDT"]
+
+# Порог для сигнала (можно менять)
+PRICE_LIMITS = {
+    "PEPEUSDT": 0.00001150,
+    "TRXUSDT": 0.1220,
+    "ENAUSDT": 0.540,
+    "MEMEUSDT": 0.0180,
+    "SUIUSDT": 3.300
+}
+
+def get_futures_price(symbol):
+    url = f"https://fapi.binance.com/fapi/v1/ticker/price?symbol={symbol}"
     try:
-        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        response.raise_for_status()
+        response = requests.get(url, timeout=5)
         data = response.json()
         return float(data["price"])
     except Exception as e:
         print(f"[ERROR] Не удалось получить цену {symbol}: {e}")
         return None
 
-def send_signal(message):
-    """Отправляем сигнал в Telegram"""
-    try:
-        bot.send_message(chat_id=CHAT_ID, text=message)
-        print(f"[INFO] Сигнал отправлен: {message}")
-    except Exception as e:
-        print(f"[ERROR] Не удалось отправить сообщение в Telegram: {e}")
+def send_signal(symbol, price):
+    message = f"📊 {symbol} на фьючерсах: {price}\n"
+    message += f"Порог для входа: {PRICE_LIMITS[symbol]}"
+    bot.send_message(chat_id=CHAT_ID, text=message)
 
 def main():
     while True:
-        for symbol, level in SYMBOLS.items():
-            price = get_price(symbol)
-            if price is None:
-                continue
-
-            if price <= level:
-                send_signal(f"🔔 {symbol} упал до {price} — ниже уровня {level}")
-            else:
-                print(f"{symbol}: {price} (без сигнала)")
-
-        time.sleep(30)  # Проверка каждые 30 секунд
+        for symbol in SYMBOLS:
+            price = get_futures_price(symbol)
+            if price is not None:
+                print(f"{symbol}: {price}")
+                if price <= PRICE_LIMITS[symbol]:
+                    send_signal(symbol, price)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
